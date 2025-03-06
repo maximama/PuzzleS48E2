@@ -13,6 +13,10 @@
             padding: 0;
             box-sizing: border-box;
         }
+  h4 {
+    padding-left: 20%;
+    padding-right: 20%;
+  }
         .game-container {
             display: flex;
             flex-direction: column;
@@ -158,6 +162,7 @@
     <div id="timer">Time: 0:00</div>
     <div class="game-container" id="game-board"></div>
     <h2 id="win-message" class="hidden">Game Won! Final Time: <span id="final-time"></span></h2>
+    <h4>To play, click the arrow or plus icons to shift or place tiles, or press 1, 2, or 3 on your keyboard to do the same for the corresponding row. The game ends when the numbers are in perfect order from 1 to 15. Have fun and good luck!</h4>
 
     <script>
         let board = [];
