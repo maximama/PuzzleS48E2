@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+      rel="stylesheet"
+    />
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Survivor Slide-n-Sort</title>
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        font-family: Arial, sans-serif;
+        user-select: none;
+        background-color: #E6E6EA;
+      }
+      .row-container {
+        display: flex;
+        align-items: center;
+        margin-bottom: 10px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(5, 50px);
+        gap: 8px;
+      }
+      .tile {
+        width: 50px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ff9f1c;
+        background-color: #ffbf69;
+        color: white;
+        font-size: 20px;
+        border-radius: 8px;
+        transition: transform 0.2s ease-in-out;
+      }
+      .empty {
+        background-color: #E6E6EA;
+        border: 2px dotted #2ec4b6;
+      }
+      .held-tile {
+        width: 50px;
+        height: 50px;
+        border: 2px solid #2ec4b6;
+        background-color: #cbf3f0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 20px;
+        color: black;
+        margin-top: 20px;
+        border-radius: 8px;
+        opacity: 0;
+        transition: opacity 0.5s ease-in-out;
+      }
+      .action-button {
+        width: 75px;
+        height: 50px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #7b2cbf;
+        background-color: #9d4edd;
+        font-size: 16px;
+        cursor: pointer;
+        margin-left: 10px;
+        color: white;
+        border-radius: 8px;
+        transition:
+          background-color 0.3s ease,
+          transform 0.2s ease;
+      }
+
+      .action-button:hover {
+        transform: scale(1.05);
+      }
+
+      .action-button:active {
+        transform: scale(0.95);
+      }
+
+      .disabled {
+        background-color: gray !important;
+        cursor: not-allowed;
+      }
+      #gameWonMessage {
+        font-size: 24px;
+        color: Black;
+        display: none;
+        margin-bottom: 20px;
+      }
+
+      #timerDisplay {
+        font-size: 18px;
+        margin-top: 10px;
+      }
+
+      #howToPlay {
+        font-size: 16px;
+        margin-top: 20px;
+        text-align: center;
+        max-width: 400px;
+        display: none;
+      }
+
+      #toggleRulesButton {
+        margin-top: 10px;
+        padding: 10px;
+        background-color: #2ec4b6;
+        color: black;
+        font-size: 16px;
+        cursor: pointer;
+        border-radius: 8px;
+        transition: background-color 0.3s ease;
+      }
+
+      #toggleRulesButton:hover {
+        background-color: #cbf3f0;
+      }
+	  
+	  #credit {
+	  margin-top: -20px;
+	  }
+    </style>
+  </head>
+  <body>
+    <h1>Survivor Slide-n-Sort 🏝️</h1>
+	<div id=credit>By Mavaze, for the RHAP community</div>
+    <!-- Toggle Button for Rules -->
+    <button id="toggleRulesButton" onclick="toggleRules()">How to Play</button>
+
+    <!-- How to Play Section -->
+    <div id="howToPlay">
+      <h3>How to Play:</h3>
+      <p>
+        <i>Survivors Ready!?</i><br /> Test your puzzle-solving abilities in this slide-n-sort puzzle from S48E2.<br />
+        The rules are simple, your goal is to sort all the numbers in order from 1-15. 
+        You can only move by sliding the entire row to the left, using the purple slide button next to each row. <br />
+        If a row contains 5 tiles, one tile will fall off, into your 'held tile' slot. You will have to select a new row, or the same row, 
+        to place it back on the board. <br /><br />Can you beat the challenge time of <b>five minutes?</b> Good luck!
+      </p>
+    </div>
+    <div id="timerDisplay">Your time starts when you make your first move</div>
+    <p>
+    &nbsp;
+    </p>    
+    <div id="gameWonMessage">🔥That's how you do it on Survivor!🔥</div>
+    <div id="game"></div>
+    <h3>Held Tile:</h3>
+    <div id="heldTile" class="held-tile"></div>
+
+    
+
+    <script>
+      const game = document.getElementById("game");
+      const heldTileDiv = document.getElementById("heldTile");
+      const gameWonMessage = document.getElementById("gameWonMessage");
+      const timerDisplay = document.getElementById("timerDisplay");
+      const howToPlay = document.getElementById("howToPlay");
+
+      let heldTile = null;
+      let rows = [
+        [1, 2, 3, 4, 5],
+        [6, 7, 8, 9, 10],
+        [11, 12, 13, 14, 15],
+      ];
+
+      let elapsedTime = 0;  // Time in seconds
+      let timerInterval = null;
+
+      function renderGrid() {
+        console.log("Rendering grid...");
+        game.innerHTML = "";
+        rows.forEach((row, rowIndex) => {
+          const rowContainer = document.createElement("div");
+          rowContainer.classList.add("row-container");
+          const grid = document.createElement("div");
+          grid.classList.add("grid");
+
+          row.forEach((tile, tileIndex) => {
+            const div = document.createElement("div");
+            div.classList.add("tile");
+            if (tile === null) {
+              div.classList.add("empty");
+            }
+            div.innerText = tile !== null ? tile : "";
+            grid.appendChild(div);
+          });
+
+          const button = document.createElement("div");
+          button.classList.add("action-button");
+          button.innerHTML = '<i class="fas fa-arrow-left"></i>'; // Use FontAwesome icon
+          button.onclick = () => handleAction(rowIndex);
+          rowContainer.appendChild(grid);
+          rowContainer.appendChild(button);
+          game.appendChild(rowContainer);
+        });
+
+        heldTileDiv.innerText = heldTile !== null ? heldTile : "";
+        heldTileDiv.style.opacity = heldTile !== null ? "1" : "0";
+      }
+
+      function handleAction(rowIndex) {
+        console.log(`Button clicked on row ${rowIndex}`);
+        console.log("Current Rows:", JSON.stringify(rows));
+        console.log("Held Tile:", heldTile);
+
+        const rowTiles = document
+          .querySelectorAll(".row-container")
+          [rowIndex].querySelectorAll(".tile");
+        const row = rows[rowIndex];
+
+        // If placing into an empty slot, update directly (no animation needed)
+        if (heldTile !== null && row.includes(null)) {
+          console.log("Placing held tile directly into empty slot.");
+          const emptyIndex = row.indexOf(null);
+          row[emptyIndex] = heldTile;
+          heldTile = null;
+          renderGrid();
+          checkWinCondition();
+          return;
+        }
+
+        // Otherwise, slide tiles before updating
+        rowTiles.forEach((tile) => {
+          tile.style.transform = "translateX(-60px)";
+        });
+
+        setTimeout(() => {
+          rowTiles.forEach((tile) => {
+            tile.style.transform = "translateX(0)";
+          });
+
+          if (heldTile === null) {
+            heldTile = rows[rowIndex].shift();
+            rows[rowIndex].push(null);
+          } else {
+            let newHeld = rows[rowIndex].shift();
+            rows[rowIndex].push(heldTile);
+            heldTile = newHeld;
+          }
+
+          requestAnimationFrame(() => {
+            renderGrid();
+            checkWinCondition();
+          });
+        }, 200);
+
+        // Start the timer when the first move is made
+        if (!timerInterval) {
+          startTimer();
+        }
+      }
+
+      function checkWinCondition() {
+        const correctOrder = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        const flatTiles = rows.flat(); // Flatten the array of rows into a single array
+
+        if (JSON.stringify(flatTiles) === JSON.stringify(correctOrder)) {
+          console.log("Win condition met!");
+          gameWonMessage.style.display = "block";
+          gameWonMessage.innerHTML = `That's how you do it on Survivor! Time: ${Math.floor(elapsedTime / 60)}m ${elapsedTime % 60}s`; // Show the time in minutes and seconds
+          clearInterval(timerInterval); // Stop the timer
+          document.querySelectorAll(".action-button").forEach((button) => {
+            button.classList.add("disabled");
+            button.onclick = null;
+          });
+        } else {
+          console.log("Win condition NOT met yet.");
+        }
+      }
+
+      function scrambleTiles() {
+        console.log("Scrambling tiles...");
+        let allTiles = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15];
+        allTiles.sort(() => Math.random() - 0.5);
+        let tileIndex = 0;
+
+        for (let i = 0; i < 3; i++) {
+          for (let j = 0; j < 5; j++) {
+            rows[i][j] = allTiles[tileIndex++];
+          }
+        }
+
+        console.log("Scrambled Grid:", JSON.stringify(rows));
+        renderGrid();
+      }
+
+      function startTimer() {
+        timerInterval = setInterval(() => {
+          elapsedTime++;
+          updateTimerDisplay();
+        }, 1000);
+      }
+
+      function updateTimerDisplay() {
+        const minutes = Math.floor(elapsedTime / 60); // Get whole minutes
+        const seconds = elapsedTime % 60; // Get remaining seconds
+        timerDisplay.innerText = `Time: ${minutes}m ${seconds}s`;
+      }
+
+      function toggleRules() {
+        if (howToPlay.style.display === "none" || howToPlay.style.display === "") {
+          howToPlay.style.display = "block";
+          document.getElementById("toggleRulesButton").innerText = "Hide How to Play";
+        } else {
+          howToPlay.style.display = "none";
+          document.getElementById("toggleRulesButton").innerText = "How to Play";
+        }
+      }
+
+      scrambleTiles();
+    </script>
+  </body>
+</html>
