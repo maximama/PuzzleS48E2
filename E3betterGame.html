@@ -1,0 +1,301 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Dice Game</title>
+<style>
+  body {
+    font-family: 'Arial', sans-serif;
+    background-color: #f5f5f5;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  h1 {
+    font-size: 2rem;
+    color: #333;
+    margin-bottom: 20px;
+    font-weight: 500;
+  }
+
+  #dice {
+    display: flex;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 20px;
+  }
+
+  .die {
+    width: 60px;
+    height: 60px;
+    border-radius: 8px;
+    background-color: #fff;
+    border: 1px solid #ddd;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease;
+  }
+
+  .die:hover {
+    transform: scale(1.1);
+  }
+
+  .flame { color: #ff5722; }
+  .skull { color: #212121; }
+  .circle { color: #9e9e9e; }
+
+  .button-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  button {
+    padding: 12px 20px;
+    margin: 5px;
+    border: none;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    background-color: #4caf50;
+    color: white;
+    transition: background-color 0.2s ease;
+    width: 200px;
+  }
+
+  button:disabled {
+    background-color: #9e9e9e;
+    cursor: not-allowed;
+  }
+
+  button:hover:not(:disabled) {
+    background-color: #45a049;
+  }
+
+  #counts {
+    font-size: 1.1rem;
+    margin-bottom: 20px;
+    color: #555;
+  }
+
+  #message {
+    font-size: 1.2rem;
+    color: #333;
+    font-weight: 500;
+    margin-bottom: 20px;
+    padding-left: 15%;
+    padding-right: 15%;
+  }
+
+  .hidden {
+    display: none;
+  }
+
+  #playAgainButton {
+    background-color: #2196f3;
+  }
+
+  #playAgainButton:hover {
+    background-color: #1976d2;
+  }
+</style>
+
+</head>
+<body>
+  <h1>S48E3 Journey, but better</h1>
+  <div id="dice"></div>
+  <p id="message">In your hand are 7 dice. Flames are good, Skulls are bad. The first roll is free. 4 Flames wins the game, 4 skulls loses.</p>
+  <p id="counts">Flames: 0, Skulls: 0</p>
+  <button id="rollButton">Roll Dice</button>
+  <button id="rollAgainButton" style="display: none;">Risk it, Roll again</button>
+  <button id="finalRollButton" style="display: none;">Final roll. Risk it all.</button>
+  <button id="playAgainButton" style="display: none;">Play Again?</button>
+  <button id="walkAwayButton" style="display: none;">Walk away now</button>
+  <script>
+    const diceContainer = document.getElementById('dice');
+    const messageDisplay = document.getElementById('message');
+    const rollButton = document.getElementById('rollButton');
+    const rollAgainButton = document.getElementById('rollAgainButton');
+    const finalRollButton = document.getElementById('finalRollButton');
+    const countsDisplay = document.getElementById('counts');
+    const playAgainButton = document.getElementById('playAgainButton');
+    const walkAwayButton = document.getElementById('walkAwayButton');
+
+    let dice = [];
+    let flames = 0;
+    let skulls = 0;
+    let totalFlames = 0;
+    let totalSkulls = 0;
+    let rollCount = 0;
+    let remainingDice = 7;
+
+    const dieFaces = {
+      standard: ['🔥', '🔥', '💀', '⚪', '⚪', '⚪'],
+      special: ['🔥', '⚪', '⚪', '⚪', '⚪', '⚪']
+    };
+
+    function rollDice(diceCount, specialDie = false) {
+      dice = [];
+      for (let i = 0; i < diceCount; i++) {
+        const faces = specialDie && i === diceCount - 1 ? dieFaces.special : dieFaces.standard;
+        const roll = faces[Math.floor(Math.random() * faces.length)];
+        dice.push
+(roll);
+      }
+      displayDice();
+      processRoll();
+    }
+
+    function displayDice() {
+      diceContainer.innerHTML = '';
+      dice.forEach(die => {
+        const dieElement = document.createElement('div');
+        dieElement.classList.add('die');
+        if (die === '🔥') dieElement.classList.add('flame');
+        if (die === '💀') dieElement.classList.add('skull');
+        if (die === '⚪') dieElement.classList.add('circle');
+        dieElement.textContent = die;
+        diceContainer.appendChild(dieElement);
+      });
+    }
+
+    function processRoll() {
+      flames = 0;
+      skulls = 0;
+      dice.forEach(die => {
+        if (die === '🔥') flames++;
+        if (die === '💀') skulls++;
+      });
+      totalFlames += flames;
+      totalSkulls += skulls;
+      messageDisplay.textContent = `Flames: ${flames}, Skulls: ${skulls}`;
+      updateCountsDisplay();
+      checkWinLose();
+    }
+
+    function updateCountsDisplay() {
+      let flameIcons = '';
+      for (let i = 0; i < totalFlames; i++) {
+        flameIcons += '🔥';
+      }
+      let skullIcons = '';
+      for (let i = 0; i < totalSkulls; i++) {
+        skullIcons += '💀';
+      }
+      countsDisplay.innerHTML = `Flames: ${totalFlames}${flameIcons}, Skulls: ${totalSkulls}${skullIcons}`;
+    }
+
+    function checkWinLose() {
+  if (totalFlames >= 4) {
+    messageDisplay.textContent = 'You win! 🎉';
+    endGame();
+    return; // Add return to prevent further processing
+  } else if (totalSkulls >= 4) {
+    messageDisplay.textContent = 'You lose! 💀';
+    endGame();
+    return; // Add return to prevent further processing
+  }
+
+  if (rollCount === 0) {
+    remainingDice -= flames + skulls;
+    if (remainingDice > 0) {
+      messageDisplay.textContent = "You now have a choice to make. Either you walk away with your vote, or you can roll again. But it will cost ya. One die will be removed and placed skull up in the skull counter 💀. Will you risk it?";
+      rollAgainButton.style.display = 'block';
+      walkAwayButton.style.display = 'block';
+    } else {
+      rollAgainButton.style.display = 'none';
+      walkAwayButton.style.display = 'none';
+      if (rollCount === 0) {
+        messageDisplay.textContent = "One roll left, but this will cost you your Shot in the dark. Swap out one of the circle dice for your shot in the dark, which has no skulls, but only 1 flame. If you don't get to 4 flames 🔥 after this roll, you lose your vote and your shot in the dark. Last chance.";
+        finalRollButton.style.display = 'block';
+        walkAwayButton.style.display = 'block';
+      }
+    }
+  } else if (rollCount === 1) {
+    messageDisplay.textContent = "One roll left, but this will cost you your Shot in the dark. Swap out one of the circle dice for your shot in the dark, which has no skulls, but only 1 flame. If you don't get to 4 flames 🔥after this roll, you lose your vote and your shot in the dark. Last chance.";
+    finalRollButton.style.display = 'block';
+    rollAgainButton.style.display = 'none';
+    walkAwayButton.style.display = 'block';
+  } else if (rollCount === 2) {
+    if (totalFlames < 4) {
+      messageDisplay.textContent = 'You lose! 💀';
+      endGame();
+    }
+  }
+}
+
+    walkAwayButton.addEventListener('click', () => {
+      rollButton.style.display = 'none';
+      rollAgainButton.style.display = 'none';
+      finalRollButton.style.display = 'none';
+      walkAwayButton.style.display = 'none';
+      messageDisplay.textContent = "The risk was not worth the reward. Got nothing for ya, head back to camp.";
+      playAgainButton.style.display = 'block';
+    });
+
+    function endGame() {
+      rollButton.style.display = 'none';
+      rollAgainButton.style.display = 'none';
+      finalRollButton.style.display = 'none';
+      playAgainButton.style.display = 'block';
+      walkAwayButton.style.display = 'none';
+    }
+
+    function resetGame() {
+      rollCount = 0;
+      remainingDice = 7;
+      flames = 0;
+      skulls = 0;
+      totalFlames = 0;
+      totalSkulls = 0;
+      updateCountsDisplay();
+      diceContainer.innerHTML = '';
+      rollButton.style.display = 'block';
+      rollAgainButton.style.display = 'none';
+      finalRollButton.style.display = 'none';
+      playAgainButton.style.display = 'none';
+      messageDisplay.textContent = "In your hand are 7 dice. Flames are good, Skulls are bad. The first roll is free. 4 Flames wins the game, 4 skulls loses.";
+      walkAwayButton.style.display = 'none';
+    }
+
+rollButton.addEventListener('click', () => {
+  resetGame();
+  rollButton.style.display = 'none';
+  rollDice(7);
+  // Buttons are only shown if the game is still ongoing
+  if (totalFlames < 4 && totalSkulls < 4) {
+    rollAgainButton.style.display = 'block';
+    walkAwayButton.style.display = 'block';
+  }
+});
+
+    rollAgainButton.addEventListener('click', () => {
+      skulls++;
+      totalSkulls++;
+      remainingDice--;
+      rollCount = 1;
+      rollDice(remainingDice);
+      rollAgainButton.style.display = 'none';
+    });
+
+    finalRollButton.addEventListener('click', () => {
+      rollCount = 2;
+      rollDice(remainingDice, true);
+      finalRollButton.style.display = 'none';
+    });
+
+    playAgainButton.addEventListener('click', () => {
+      resetGame();
+    });
+  </script>
+</body>
+</html>
